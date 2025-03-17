@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..database import Base
 
@@ -19,6 +19,8 @@ class User(Base):
     updated_at: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now()
     )
+
+    reforested_areas = relationship("ReforestedArea", back_populates="user", cascade="all, delete-orphan")
 
     def set_password(self, plaintext_password: str) -> None:
         from .services import PasswordService
