@@ -35,4 +35,4 @@ class ReforestedArea(Base):
         return to_shape(self.geom).__geo_interface__  # Convert to GeoJSON
 
     def __repr__(self) -> str:
-        return f"ReforestedArea(id='{self.id}', name='{self.name}', area={self.area})"
+        return f"ReforestedArea(id='{self.id}', name='{self.name}', area_in_m2={self.area_in_m2})"
