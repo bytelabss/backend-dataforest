@@ -13,13 +13,16 @@ class ReforestedAreaService:
     def __init__(self, session: Session):
         self.repository = ReforestedAreaRepository(session)
 
-    def create_area(self, user_id: UUID, name: str, description: str, area: float, geom_geojson) -> ReforestedArea:
-        geom = shape(geom_geojson)
-        if geom.geom_type != "Polygon":
+    def create_area(self, user_id: UUID, name: str, description: str, area_in_m2: float, geom : dict) -> ReforestedArea:
+        geom2 = shape(geom)
+        if geom2.geom_type != "Polygon":
             raise ValueError("Geometry must be a valid Polygon.")
+        
+    # Converte o Polygon para WKT e adiciona o SRID (4326)
+        geom_wkt = geom2.wkt  # Converte o Polygon para WKT
+        geom_ewkt = f"SRID=4326;{geom_wkt}"  # Adiciona o SRID para EWKT
 
-        new_area = ReforestedArea(user_id=user_id, name=name, description=description, area=area)
-        new_area.set_geometry_from_geojson(geom_geojson)
+        new_area = ReforestedArea(user_id=user_id, name=name, description=description, area_in_m2=area_in_m2, geom=geom_ewkt)
 
         return self.repository.insert(new_area)
 

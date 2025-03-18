@@ -24,7 +24,7 @@ class ReforestedAreaSchema(Schema):
     user_id = fields.UUID(required=True)
     name = fields.String(required=True, validate=Length(min=3, max=100))
     description = fields.String(validate=Length(max=500))
-    area = fields.Float(required=True, validate=Range(min=0.1))
+    area_in_m2 = fields.Float(required=True, validate=Range(min=0.1))
     geom = GeoJSONField(required=True)  # Handle GeoJSON directly
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)
