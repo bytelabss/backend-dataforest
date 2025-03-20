@@ -35,19 +35,21 @@ class ReforestedAreaService:
     def list_areas(self, offset: int = 0, limit: int = 10) -> List[ReforestedArea]:
         return self.repository.list_areas(offset, limit)
 
-    def update_area(self, id: UUID, name: str = None, description: str = None, area: float = None, geom_geojson=None) -> ReforestedArea:
-        area_obj = self.get_area_by_id(id)
+    def update_area(self, area: ReforestedArea, **validated_data) -> ReforestedArea:
 
-        if name:
-            area_obj.name = name
-        if description:
-            area_obj.description = description
-        if area:
-            area_obj.area = area
-        if geom_geojson:
-            area_obj.set_geometry_from_geojson(geom_geojson)
+        if 'name' in validated_data:
+            area.name = validated_data['name']
+        if 'description' in validated_data:
+            area.description = validated_data['description']
+        if 'area_in_m2' in validated_data:
+            area.area_in_m2 = validated_data['area_in_m2']
+        if 'geom' in validated_data:
+            geom2 = shape(validated_data['geom'])
+            geom_wkt = geom2.wkt  # Converte o Polygon para WKT
+            geom_ewkt = f"SRID=4326;{geom_wkt}"  # Adiciona o SRID para EWKT
+            area.set_geometry_from_geojson(geom_ewkt)
 
-        return self.repository.update(area_obj)
+        return self.repository.update(area)
 
     def delete_area(self, id: UUID) -> None:
         area = self.get_area_by_id(id)
