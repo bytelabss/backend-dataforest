@@ -28,7 +28,7 @@ class ReforestedArea(Base):
     user: Mapped["User"] = relationship("User", back_populates="reforested_areas")
 
     def set_geometry_from_geojson(self, geojson):
-        self.geom = shape(geojson)  # Convert GeoJSON to Shapely and store as POLYGON
+        self.geom = geojson  # Convert GeoJSON to Shapely and store as POLYGON
 
     def to_geojson(self):
         from geoalchemy2.shape import to_shape
