@@ -17,6 +17,10 @@ def create_app(config=Config):
         exit(1)
 
     app = Flask(__name__)
+
+    if __name__ == "main":
+        app.run(debug=False)
+
     app.config.from_object(config)
 
     CORS(app)
