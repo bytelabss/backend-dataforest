@@ -37,6 +37,24 @@ def create_area():
     return jsonify(reforested_area_schema.dump(area)), 201
 
 
+@bp.route("/reforested_areas/<uuid:area_id>", methods=["PUT"])
+@handle_exceptions
+def update_area(area_id):
+    session = Session()
+    service = ReforestedAreaService(session)
+    data = request.get_json()
+    validated_data = reforested_area_schema.load(data)
+    
+    # Tenta buscar a área com o ID fornecido
+    area = service.get_area_by_id(area_id)
+    
+    # Atualiza a área com os dados validados
+    updated_area = service.update_area(area, **validated_data)
+    
+    # Retorna a área atualizada
+    return jsonify(reforested_area_schema.dump(updated_area)), 200
+
+
 @bp.route("/reforested_areas/<uuid:area_id>", methods=["GET"])
 @handle_exceptions
 def get_area(area_id):
