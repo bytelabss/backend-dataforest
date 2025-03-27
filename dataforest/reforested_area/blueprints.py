@@ -44,3 +44,11 @@ def get_area(area_id):
     service = ReforestedAreaService(session)
     area = service.get_area_by_id(area_id)
     return jsonify(reforested_area_schema.dump(area)), 200
+
+@bp.route("/reforested_areas", methods=["GET"])
+@handle_exceptions
+def list_areas():
+    session = Session()
+    service = ReforestedAreaService(session)
+    areas = service.list_areas()
+    return jsonify(reforested_areas_schema.dump(areas)), 200
