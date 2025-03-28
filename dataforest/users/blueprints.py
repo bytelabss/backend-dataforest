@@ -4,6 +4,7 @@ from flask import Blueprint, request, jsonify
 from marshmallow import ValidationError
 
 from ..database import Session
+from ..auth.decorators import requires_auth
 from .services import UserService
 from .exceptions import UserNotFoundError, EmailAlreadyInUseError, InvalidUserDataError
 from .schemas import user_schema, users_schema, pagination_schema
@@ -32,6 +33,7 @@ def handle_exceptions(func):
 
 @bp.route("/users", methods=["POST"])
 @handle_exceptions
+@requires_auth
 def create_user():
     session = Session()
     service = UserService(session)
@@ -47,6 +49,7 @@ def create_user():
 
 @bp.route("/users/<uuid:user_id>", methods=["GET"])
 @handle_exceptions
+@requires_auth
 def get_user(user_id):
     session = Session()
     service = UserService(session)
@@ -56,6 +59,7 @@ def get_user(user_id):
 
 @bp.route("/users/<uuid:user_id>", methods=["PUT"])
 @handle_exceptions
+@requires_auth
 def update_user(user_id):
     session = Session()
     service = UserService(session)
@@ -69,6 +73,7 @@ def update_user(user_id):
 
 @bp.route("/users/<uuid:user_id>", methods=["DELETE"])
 @handle_exceptions
+@requires_auth
 def delete_user(user_id):
     session = Session()
     service = UserService(session)
@@ -78,6 +83,7 @@ def delete_user(user_id):
 
 @bp.route("/users", methods=["GET"])
 @handle_exceptions
+@requires_auth
 def list_users():
     session = Session()
     service = UserService(session)
