@@ -1,10 +1,17 @@
 import uuid
 from datetime import datetime
+from enum import Enum
 
-from sqlalchemy import func
+from sqlalchemy import func, Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..database import Base
+
+
+class UserRole(Enum):
+    ENVIRONMENTAL_ENGINEER = "environmental_engineer"
+    PRODUCER = "producer"
+    ADMINISTRATOR = "administrator"
 
 
 class User(Base):
@@ -13,6 +20,7 @@ class User(Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     full_name: Mapped[str]
     email: Mapped[str] = mapped_column(unique=True)
+    role: Mapped[UserRole] = mapped_column(SQLEnum(UserRole, name="user_role"), nullable=False, default=UserRole.PRODUCER)
     encrypted_password: Mapped[str]
 
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
@@ -20,7 +28,9 @@ class User(Base):
         server_default=func.now(), onupdate=func.now()
     )
 
-    reforested_areas = relationship("ReforestedArea", back_populates="user", cascade="all, delete-orphan")
+    reforested_areas = relationship(
+        "ReforestedArea", back_populates="user", cascade="all, delete-orphan"
+    )
 
     def set_password(self, plaintext_password: str) -> None:
         from .services import PasswordService

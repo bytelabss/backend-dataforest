@@ -22,6 +22,7 @@ def create_app(config=Config):
         app.run(debug=False)
 
     app.config.from_object(config)
+    app.json.sort_keys = Config.JSON_SORT_KEYS
 
     CORS(app)
 

@@ -5,7 +5,7 @@ from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from sqlalchemy.orm import Session
 
-from .models import User
+from .models import User, UserRole
 from .repositories import UserRepository
 from .exceptions import (
     UserNotFoundError,
@@ -18,14 +18,14 @@ class UserService:
     def __init__(self, session: Session):
         self.repository = UserRepository(session)
 
-    def create_user(self, full_name: str, email: str, password: str) -> User:
+    def create_user(self, full_name: str, email: str, role: UserRole, password: str) -> User:
         if not full_name or not email or not password:
             raise InvalidUserDataError
 
         if self.repository.get_by_email(email):
             raise EmailAlreadyInUseError
 
-        user = User(full_name=full_name, email=email)
+        user = User(full_name=full_name, email=email, role=role)
         user.set_password(password)
         return self.repository.insert(user)
 
@@ -41,7 +41,7 @@ class UserService:
             raise UserNotFoundError
         return user
 
-    def update_user(self, id: UUID, full_name: str = None, email: str = None) -> User:
+    def update_user(self, id: UUID, full_name: str = None, email: str = None, role: UserRole = None) -> User:
         user = self.get_user_by_id(id)
 
         if email and user.email != email and self.repository.get_by_email(email):
@@ -51,6 +51,8 @@ class UserService:
             user.full_name = full_name
         if email:
             user.email = email
+        if role:
+            user.role = role
 
         return self.repository.update(user)
 
