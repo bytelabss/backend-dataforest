@@ -46,6 +46,7 @@ class Config(FlaskConfig):
     DEBUG = APP_DEBUG
     TESTING = os.getenv("APP_TESTING", APP_ENV == "testing")
     SECRET_KEY = APP_SECRET
+    JSON_SORT_KEYS = False
 
     @classmethod
     def validate_settings(cls):
