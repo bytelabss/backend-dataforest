@@ -7,6 +7,7 @@ cffi==1.17.1
 click==8.1.8
 Flask==3.1.0
 flask-cors==5.0.1
+GeoAlchemy2==0.17.1
 greenlet==3.1.1
 itsdangerous==2.2.0
 Jinja2==3.1.6
@@ -16,14 +17,25 @@ MarkupSafe==3.0.2
 marshmallow==3.26.1
 mdurl==0.1.2
 mypy-extensions==1.0.0
+<<<<<<< HEAD
+=======
+numpy==2.2.3
+>>>>>>> dev
 packaging==24.2
 pathspec==0.12.1
 platformdirs==4.3.6
 psycopg2-binary==2.9.10
 pycparser==2.22
 Pygments==2.19.1
+<<<<<<< HEAD
 python-dotenv==1.0.1
 rich==13.9.4
+=======
+PyJWT==2.10.1
+python-dotenv==1.0.1
+rich==13.9.4
+shapely==2.0.7
+>>>>>>> dev
 SQLAlchemy==2.0.38
 typing_extensions==4.12.2
 Werkzeug==3.1.3

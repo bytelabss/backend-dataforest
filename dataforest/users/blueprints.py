@@ -4,6 +4,8 @@ from flask import Blueprint, request, jsonify
 from marshmallow import ValidationError
 
 from ..database import Session
+from ..auth.decorators import requires_auth
+from .models import UserRole
 from .services import UserService
 from .exceptions import UserNotFoundError, EmailAlreadyInUseError, InvalidUserDataError
 from .schemas import user_schema, users_schema, pagination_schema
@@ -32,6 +34,7 @@ def handle_exceptions(func):
 
 @bp.route("/users", methods=["POST"])
 @handle_exceptions
+@requires_auth(required_role=UserRole.ADMINISTRATOR)
 def create_user():
     session = Session()
     service = UserService(session)
@@ -40,6 +43,7 @@ def create_user():
     user = service.create_user(
         full_name=validated_data["full_name"],
         email=validated_data["email"],
+        role=validated_data["role"],
         password=validated_data["password"],
     )
     return jsonify(user_schema.dump(user)), 201
@@ -47,6 +51,7 @@ def create_user():
 
 @bp.route("/users/<uuid:user_id>", methods=["GET"])
 @handle_exceptions
+@requires_auth(required_role=UserRole.ADMINISTRATOR)
 def get_user(user_id):
     session = Session()
     service = UserService(session)
@@ -56,19 +61,24 @@ def get_user(user_id):
 
 @bp.route("/users/<uuid:user_id>", methods=["PUT"])
 @handle_exceptions
+@requires_auth(required_role=UserRole.ADMINISTRATOR)
 def update_user(user_id):
     session = Session()
     service = UserService(session)
     data = request.get_json()
     validated_data = user_schema.load(data, partial=True)
     user = service.update_user(
-        user_id, validated_data.get("full_name"), validated_data.get("email")
+        user_id,
+        validated_data.get("full_name"),
+        validated_data.get("email"),
+        validated_data.get("role"),
     )
     return jsonify(user_schema.dump(user)), 200
 
 
 @bp.route("/users/<uuid:user_id>", methods=["DELETE"])
 @handle_exceptions
+@requires_auth(required_role=UserRole.ADMINISTRATOR)
 def delete_user(user_id):
     session = Session()
     service = UserService(session)
@@ -78,6 +88,7 @@ def delete_user(user_id):
 
 @bp.route("/users", methods=["GET"])
 @handle_exceptions
+@requires_auth(required_role=UserRole.ADMINISTRATOR)
 def list_users():
     session = Session()
     service = UserService(session)

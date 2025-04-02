@@ -1,6 +1,7 @@
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
+from geoalchemy2 import alembic_helpers
 
 from dataforest.config import Config
 from dataforest.database import load_models, Base
@@ -27,7 +28,7 @@ def include_object(object, name, type_, reflected, compare_to):
     if type_ == "table" and name in exclude_tables:
         return False
     else:
-        return True
+        return alembic_helpers.include_object(object, name, type_, reflected, compare_to)
 
 
 def run_migrations_offline() -> None:
@@ -37,6 +38,9 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        include_object=include_object,
+        process_revision_directives=alembic_helpers.writer,
+        render_item=alembic_helpers.render_item,
     )
 
     with context.begin_transaction():
@@ -55,6 +59,8 @@ def run_migrations_online() -> None:
             connection=connection,
             target_metadata=target_metadata,
             include_object=include_object,
+            process_revision_directives=alembic_helpers.writer,
+            render_item=alembic_helpers.render_item,
         )
 
         with context.begin_transaction():
