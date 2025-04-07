@@ -6,22 +6,6 @@ class ConsentimentoRepository:
     def __init__(self, session: Session):
         self.session = session
 
-    # def get_term_by_id(self, term_id):
-    #     return self.session.get(Terms, term_id)
-
-    # def insert_user_consent(self, user_consent: UserConsent):
-    #     self.session.add(user_consent)
-    #     self.session.commit()
-    #     self.session.refresh(user_consent)
-    #     return user_consent
-
-    # def get_user_consent(self, user_id):
-    #     return self.session.query(UserConsent).filter_by(user_id=user_id).first()
-
-    # def delete_user_consent(self, user_consent):
-    #     self.session.delete(user_consent)
-    #     self.session.commit()
-
 class TermSchema(Schema):
     id = fields.UUID(dump_only=True)
     version = fields.Str(required=True, validate=validate.Length(max=50))
@@ -43,10 +27,7 @@ class UserConsentSectionSchema(Schema):
     accepted = fields.Bool(required=True)
     accepted_at = fields.DateTime(dump_only=True)
 
-class UserConsentCreateSchema(Schema):
-    user_id = fields.UUID(required=True)
-    section_id = fields.UUID(required=True)
-    accepted = fields.Bool(required=True)
-
 term_schema = TermSchema()
 term_section_schema = TermSectionSchema(many=True)
+user_consent_schema = UserConsentSectionSchema(many=True)
+

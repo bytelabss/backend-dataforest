@@ -3,6 +3,7 @@ import uuid
 from sqlalchemy.orm import Session
 from .models import Terms, TermSection, UserConsentSection
 from .repositories import ConsentimentoRepository
+from datetime import datetime
 
 class TermService:
     def __init__(self, session: Session):
@@ -37,57 +38,27 @@ class TermService:
         except Exception as e:
             raise ValueError(f"Erro ao criar termo: {str(e)}")
 
-    # def get_user_consents(self, user_id: str) -> Dict:
-    #     """Obtém todos os consentimentos de um usuário"""
-    #     try:
-    #         user_uuid = uuid.UUID(user_id)
-    #     except ValueError:
-    #         raise ValueError("ID de usuário inválido")
-
-    #     consents = self.db.query(UserConsentSection)\
-    #                     .filter_by(user_id=user_uuid)\
-    #                     .all()
-        
-    #     required_sections = self.db.query(TermSection)\
-    #                             .filter_by(required=True)\
-    #                             .all()
-
-    #     return {
-    #         'consents': consents,
-    #         'required_sections': required_sections
-    #     }
-
-    # def register_consent(self, user_id: str, section_id: str, accepted: bool) -> UserConsentSection:
-    #     """Registra o aceite/rejeição de uma seção"""
-    #     try:
-    #         user_uuid = uuid.UUID(user_id)
-    #         section_uuid = uuid.UUID(section_id)
-    #     except ValueError:
-    #         raise ValueError("ID inválido")
-
-    #     # Verifica se a seção existe
-    #     section = self.db.get(TermSection, section_uuid)
-    #     if not section:
-    #         raise ValueError("Seção não encontrada")
-
-    #     # Registra o consentimento
-    #     consent = UserConsentSection(
-    #         user_id=user_uuid,
-    #         section_id=section_uuid,
-    #         accepted=accepted
-    #     )
-        
-    #     try:
-    #         self.db.add(consent)
-    #         self.db.commit()
-    #         return consent
-    #     except Exception as e:
-    #         self.db.rollback()
-    #         raise ValueError(f"Erro ao registrar consentimento: {str(e)}")
-
     def list_active_terms(self) -> List[Terms]:
         return self.repository.get_terms()
     
     def get_latest_active_term(self) -> Terms:
         return self.repository.get_latest_term()
+    
+    def register_consents(self, user_id: uuid, sections: list, accepted: bool) -> dict:
+        try:
 
+            # Process each section
+            for section in sections:
+                # Create consent record
+                consent = UserConsentSection(
+                    user_id=user_id,
+                    section_id=section['section_id'],
+                    accepted=accepted,
+                    accepted_at=datetime.utcnow()
+                                                  )
+                self.repository.insert(consent)
+            
+            return {"success": True, "message": "Termos aceitos com sucesso"}
+            
+        except Exception as e:
+            return {"success": False, "message": f"Erro ao registrar termos: {str(e)}"}

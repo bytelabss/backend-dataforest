@@ -21,29 +21,12 @@ class ConsentimentoRepository:
             .order_by(Terms.version.desc())\
             .first()
 
-    def insert(self, area: Terms) -> Optional[Terms]:
+    def insert(self, term: Terms) -> Optional[Terms]:
         try:
-            self.session.add(area)
+            self.session.add(term)
             self.session.commit()
-            self.session.refresh(area)
-            return area
+            self.session.refresh(term)
+            return term
         except IntegrityError:
             self.session.rollback()
             return None
-            
-    # def insert_user_consent(self, user_consent: UserConsent):
-    #     self.session.add(user_consent)
-    #     self.session.commit()
-    #     self.session.refresh(user_consent)
-    #     return user_consent
-
-    # def insert_user_consent_sections(self, section_consents: list[UserConsentSection]):
-    #     self.session.add_all(section_consents)
-    #     self.session.commit()
-
-    # def get_user_consent(self, user_id):
-    #     return self.session.query(UserConsent).filter_by(user_id=user_id).first()
-
-    # def delete_user_consent(self, user_consent):
-    #     self.session.delete(user_consent)
-    #     self.session.commit()
