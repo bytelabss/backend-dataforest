@@ -44,7 +44,7 @@ class TermService:
     def get_latest_active_term(self) -> Terms:
         return self.repository.get_latest_term()
     
-    def register_consents(self, user_id: uuid, sections: list, accepted: bool) -> dict:
+    def register_consents(self, user_id: uuid, sections: list) -> dict:
         try:
 
             # Process each section
@@ -53,7 +53,7 @@ class TermService:
                 consent = UserConsentSection(
                     user_id=user_id,
                     section_id=section['section_id'],
-                    accepted=accepted,
+                    accepted=section['accepted'],
                     accepted_at=datetime.utcnow()
                                                   )
                 self.repository.insert(consent)

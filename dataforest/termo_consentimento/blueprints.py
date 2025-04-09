@@ -56,24 +56,9 @@ def accept_terms():
     try:
         data = request.get_json()
         
-        # Validate input
-        if not data or 'sections' not in data or 'accepted' not in data:
-            return jsonify({
-                "success": False,
-                "message": "Missing required fields: sections and accepted"
-            }), 400
-            
         sections = data.get('sections', [])
-        accepted = data.get('accepted')
-        
-        # Additional validation
-        if not isinstance(accepted, bool):
-            return jsonify({
-                "success": False,
-                "message": "Accepted must be a boolean"
-            }), 400
-            
-        result = service.register_consents(user_id, sections, accepted)
+
+        result = service.register_consents(user_id, sections)
         
         if result['success']:
             return jsonify(result), 200
