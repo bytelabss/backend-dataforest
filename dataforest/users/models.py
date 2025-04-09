@@ -9,9 +9,9 @@ from ..database import Base
 
 
 class UserRole(Enum):
-    ENVIRONMENTAL_ENGINEER = "environmental_engineer"
-    PRODUCER = "producer"
-    ADMINISTRATOR = "administrator"
+    ENVIRONMENTAL_ENGINEER = "ENVIRONMENTAL_ENGINEER"
+    PRODUCER = "PRODUCER"
+    ADMINISTRATOR = "ADMINISTRATOR"
 
 
 class User(Base):
