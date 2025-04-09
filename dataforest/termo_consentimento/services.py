@@ -62,3 +62,16 @@ class TermService:
             
         except Exception as e:
             return {"success": False, "message": f"Erro ao registrar termos: {str(e)}"}
+        
+    def update_consents(self, user_id, sections: list) -> dict:
+        try:
+            for item in sections:
+                section_id = item.get("section_id")
+                accepted = item.get("accepted")
+
+                self.repository.update_consent(section_id=section_id, user_id=user_id, accepted=accepted)
+            return {"success": True, "message": "Termos atualizados com sucesso"}
+
+        except Exception as e:
+            self.session.rollback()
+            return {"success": False, "message": "Erro ao atualizar termos"}

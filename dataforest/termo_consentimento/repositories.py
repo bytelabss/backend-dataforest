@@ -30,3 +30,28 @@ class ConsentimentoRepository:
         except IntegrityError:
             self.session.rollback()
             return None
+        
+    def update_consent(self, user_id: UUID, section_id: UUID, accepted: bool) -> Optional[UserConsentSection]:
+        try:
+            consent = self.session.query(UserConsentSection).filter_by(
+                user_id=user_id,
+                section_id=section_id
+            ).one_or_none()
+
+            if consent:
+                consent.accepted = accepted
+            else:
+                consent = UserConsentSection(
+                    user_id=user_id,
+                    section_id=section_id,
+                    accepted=accepted
+                )
+                self.session.add(consent)
+
+            self.session.commit()
+            return consent
+
+        except Exception as e:
+            self.session.rollback()
+            print(f"[ERRO AO ATUALIZAR CONSENTIMENTO] {e}")
+            return None

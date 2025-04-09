@@ -73,3 +73,24 @@ def accept_terms():
         }), 500
     finally:
         session.close()
+
+@bp.route('/terms/atualizar', methods=['PUT'])
+@requires_auth()
+def update_terms():
+    session = Session()
+    service = TermService(session)
+    user_id = g.current_user.id
+
+    try:
+        data = request.get_json()
+        sections = data.get('sections', [])
+
+        result = service.update_consents(user_id, sections)
+
+        if result['success']:
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 400
+        
+    finally:
+        session.close()
