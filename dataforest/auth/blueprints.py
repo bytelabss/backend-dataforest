@@ -18,6 +18,7 @@ def get_token():
 
     user = user_service.get_user_by_email(data["email"])
     if user and user.check_password(data["password"]):
-        return { "token": token_service.generate_token(user) }
+        return { "token": token_service.generate_token(user),
+                "id" : user.id}
 
     return { "error": "Invalid credentials" }, 400
