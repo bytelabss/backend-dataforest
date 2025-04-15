@@ -14,8 +14,16 @@ engine = create_engine(
 )
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+# engine e session do secundário
+secondary_engine = create_engine(
+    Config.SQLALCHEMY_BINDS["secundario"], echo=Config.SQLALCHEMY_ECHO
+)
+SecondarySession = sessionmaker(autocommit=False, autoflush=False, bind=secondary_engine)
 
 class Base(DeclarativeBase):
+    pass
+
+class SecondaryBase(DeclarativeBase):
     pass
 
 
