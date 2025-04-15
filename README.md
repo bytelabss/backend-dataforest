@@ -51,6 +51,10 @@ CREATE USER dataforest WITH ENCRYPTED PASSWORD 'dataforest';
 -- Criar o banco de dados e definir o usuário como proprietário
 CREATE DATABASE dataforest OWNER dataforest;
 
+
+-- Criar o banco de dados e definir o usuário como proprietário
+CREATE DATABASE dataforest_keys OWNER dataforest;
+
 -- Saia do PostgreSQL
 \q
 ```
@@ -85,6 +89,19 @@ SELECT postgis_full_version();
 
 ```sh
 alembic upgrade head
+```
+
+
+## Criação da tabela para armazenamento das chaves de criptografia individual de cada usuário
+
+```sql
+CREATE TABLE user_keys (
+    id SERIAL PRIMARY KEY,
+    user_id UUID NOT NULL,
+    encryption_key TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 ```
 
 
