@@ -39,6 +39,14 @@ class Config(FlaskConfig):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = APP_ENV == "development"
 
+    MONGO_URI = os.getenv("MONGO_URI")
+    MONGO_USER = os.getenv("MONGO_USER")
+    MONGO_PASS = os.getenv("MONGO_PASS")
+    MONGO_DB = os.getenv("MONGO_DB")
+
+    # MongoDB
+    MONGO_URI = MONGO_URI.replace("<user>", MONGO_USER).replace("<db_password>", MONGO_PASS)
+
     # Static
     STATIC_DIR = PROJECT_DIR / "static"
 
@@ -65,6 +73,10 @@ class Config(FlaskConfig):
             "DB_USER",
             "DB_PASS",
             "DB_NAME",
+            "MONGO_URI",
+            "MONGO_USER",
+            "MONGO_PASS",
+            "MONGO_DB",
         ]
 
         for var in required_vars:

@@ -28,11 +28,10 @@ def handle_exceptions(func):
 @bp.route("/reforested_areas", methods=["POST"])
 @handle_exceptions
 def create_area():
-    session = Session()
-    service = ReforestedAreaService(session)
+    service = ReforestedAreaService()
     data = request.get_json()
+    print(data)
     validated_data = reforested_area_schema.load(data)
-
     area = service.create_area(**validated_data)
     return jsonify(reforested_area_schema.dump(area)), 201
 
@@ -40,8 +39,7 @@ def create_area():
 @bp.route("/reforested_areas/<uuid:area_id>", methods=["PUT"])
 @handle_exceptions
 def update_area(area_id):
-    session = Session()
-    service = ReforestedAreaService(session)
+    service = ReforestedAreaService()
     data = request.get_json()
     validated_data = reforested_area_schema.load(data)
     
@@ -58,15 +56,24 @@ def update_area(area_id):
 @bp.route("/reforested_areas/<uuid:area_id>", methods=["GET"])
 @handle_exceptions
 def get_area(area_id):
-    session = Session()
-    service = ReforestedAreaService(session)
+    service = ReforestedAreaService()
     area = service.get_area_by_id(area_id)
     return jsonify(reforested_area_schema.dump(area)), 200
 
 @bp.route("/reforested_areas", methods=["GET"])
 @handle_exceptions
 def list_areas():
-    session = Session()
-    service = ReforestedAreaService(session)
-    areas = service.list_areas()
+    offset = request.args.get("offset", default=0, type=int)
+    limit = request.args.get("limit", default=10, type=int)
+
+    service = ReforestedAreaService()
+    areas = service.list_areas(offset=offset, limit=limit)
+
     return jsonify(reforested_areas_schema.dump(areas)), 200
+
+@bp.route("/reforested_areas/<uuid:area_id>", methods=["DELETE"])
+@handle_exceptions
+def delete_area(area_id):
+    service = ReforestedAreaService()
+    service.delete_area(area_id)
+    return jsonify({"message": "Reforested Area deleted successfully."}), 204

@@ -28,10 +28,6 @@ class User(Base):
         server_default=func.now(), onupdate=func.now()
     )
 
-    reforested_areas = relationship(
-        "ReforestedArea", back_populates="user", cascade="all, delete-orphan"
-    )
-
     def set_password(self, plaintext_password: str) -> None:
         from .services import PasswordService
 

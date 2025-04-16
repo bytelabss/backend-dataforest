@@ -1,56 +1,31 @@
-from uuid import UUID
-from typing import List
-
-from sqlalchemy.orm import Session
-from shapely.geometry import shape
-
+import datetime
 from .models import ReforestedArea
 from .repositories import ReforestedAreaRepository
 from .exceptions import ReforestedAreaNotFoundError
 
-
 class ReforestedAreaService:
-    def __init__(self, session: Session):
-        self.repository = ReforestedAreaRepository(session)
+    def __init__(self):
+        self.repository = ReforestedAreaRepository()
 
-    def create_area(self, user_id: UUID, name: str, description: str, area_in_m2: float, geom : dict) -> ReforestedArea:
-        geom2 = shape(geom)
-        if geom2.geom_type != "Polygon":
-            raise ValueError("Geometry must be a valid Polygon.")
-        
-    # Converte o Polygon para WKT e adiciona o SRID (4326)
-        geom_wkt = geom2.wkt  # Converte o Polygon para WKT
-        geom_ewkt = f"SRID=4326;{geom_wkt}"  # Adiciona o SRID para EWKT
+    def create_area(self, user_id, name, description, area_in_m2, geom):
+        area = ReforestedArea(user_id, name, description, area_in_m2, geom)
+        return self.repository.insert(area)
 
-        new_area = ReforestedArea(user_id=user_id, name=name, description=description, area_in_m2=area_in_m2, geom=geom_ewkt)
-
-        return self.repository.insert(new_area)
-
-    def get_area_by_id(self, id: UUID) -> ReforestedArea:
-        area = self.repository.get_by_id(id)
+    def get_area_by_id(self, area_id):
+        area = self.repository.get_by_id(area_id)
         if not area:
-            raise ReforestedAreaNotFoundError("Reforested Area not found.")
+            raise ReforestedAreaNotFoundError()
         return area
 
-    def list_areas(self, offset: int = 0, limit: int = 10) -> List[ReforestedArea]:
+    def list_areas(self, offset=0, limit=10):
         return self.repository.list_areas(offset, limit)
 
-    def update_area(self, area: ReforestedArea, **validated_data) -> ReforestedArea:
-
-        if 'name' in validated_data:
-            area.name = validated_data['name']
-        if 'description' in validated_data:
-            area.description = validated_data['description']
-        if 'area_in_m2' in validated_data:
-            area.area_in_m2 = validated_data['area_in_m2']
-        if 'geom' in validated_data:
-            geom2 = shape(validated_data['geom'])
-            geom_wkt = geom2.wkt  # Converte o Polygon para WKT
-            geom_ewkt = f"SRID=4326;{geom_wkt}"  # Adiciona o SRID para EWKT
-            area.set_geometry_from_geojson(geom_ewkt)
-
+    def update_area(self, area: ReforestedArea, **validated_data):
+        for attr, value in validated_data.items():
+            setattr(area, attr, value)
+        area.updated_at = datetime.datetime.utcnow()
         return self.repository.update(area)
 
-    def delete_area(self, id: UUID) -> None:
-        area = self.get_area_by_id(id)
-        self.repository.delete(area)
+    def delete_area(self, area_id):
+        area = self.get_area_by_id(area_id)
+        return self.repository.delete(area.id)
