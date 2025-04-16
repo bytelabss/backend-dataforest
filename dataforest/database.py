@@ -5,9 +5,12 @@ import pkgutil
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from pymongo import MongoClient
 
 from .config import Config
 
+mongo_client = MongoClient(Config.MONGO_URI, document_class=dict)
+mongo_db = mongo_client[Config.MONGO_DB]
 
 engine = create_engine(
     Config.SQLALCHEMY_DATABASE_URI, echo=Config.SQLALCHEMY_ECHO, plugins=["geoalchemy2"]
