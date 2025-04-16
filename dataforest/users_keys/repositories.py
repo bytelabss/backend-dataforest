@@ -20,3 +20,15 @@ class UserKeysRepository:
         except IntegrityError:
             self.session.rollback()
             return None
+        
+    def get_by_user_id(self, user_id: UUID) -> Optional[UsersKeys]:
+        return self.session.query(UsersKeys).filter_by(user_id=user_id).first()
+    
+    def delete(self, user: UsersKeys) -> bool:
+        try:
+            self.session.delete(user)
+            self.session.commit()
+            return True
+        except Exception:
+            self.session.rollback()
+            return False

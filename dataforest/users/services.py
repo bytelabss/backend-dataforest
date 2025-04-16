@@ -33,8 +33,8 @@ class UserService:
         encryption_key = Fernet.generate_key()
         fernet = Fernet(encryption_key)
     
-        encrypted_email = fernet.encrypt(email.encode()).decode()
-        encrypted_full_name = fernet.encrypt(full_name.encode()).decode()
+        encrypted_email = fernet.encrypt(email.encode("utf-8")).decode()
+        encrypted_full_name = fernet.encrypt(full_name.encode("utf-8")).decode()
 
         user = User(full_name=encrypted_full_name, email=encrypted_email, role=role)
         user.set_password(password)
@@ -60,10 +60,13 @@ class UserService:
         return user
 
     def get_user_by_email(self, email: str) -> User:
-        user = self.repository.get_by_email(email)
-        if not user:
+        usuarios = self.list_users()
+        for user in usuarios:
+            if user.email == email:
+                usuario = user
+        if not usuario:
             raise UserNotFoundError
-        return user
+        return usuario
 
     def update_user(self, id: UUID, full_name: str = None, email: str = None, role: UserRole = None) -> User:
         user = self.get_user_by_id(id)
@@ -82,15 +85,35 @@ class UserService:
 
     def delete_user(self, id: UUID) -> None:
         user = self.repository.get_by_id(id)
+        session2 = SecondarySession()
+        service2 = UsersKeysService(session2)
+
         if not user:
             raise UserNotFoundError
         self.repository.delete(user)
+        service2.delete_user(id)
 
     def list_users(self, offset: int = 0, limit: int = 10) -> List[User]:
+        session2 = SecondarySession()
+        service2 = UsersKeysService(session2)
+        
+        
+
         if offset < 0 or limit <= 0:
             raise InvalidUserDataError
 
-        return self.repository.list_users(offset, limit)
+        usuarios = self.repository.list_users(offset, limit)
+        for user in usuarios:
+            user_key = service2.get_user_by_user_id(user.id)
+            fernet = Fernet(user_key.encryption_key)
+            decrypted_email = fernet.decrypt(user.email).decode("utf-8")
+            decrypted_name = fernet.decrypt(user.full_name).decode("utf-8")
+            
+            user.email = decrypted_email
+            user.full_name = decrypted_name
+
+
+        return usuarios
 
 
 class PasswordService:

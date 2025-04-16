@@ -3,6 +3,9 @@ from flask import request, Blueprint
 from ..database import Session
 from ..users.services import UserService
 from .services import TokenService
+from cryptography.fernet import Fernet
+from ..database import SecondarySession
+from ..users_keys.services import UsersKeysService
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -16,9 +19,13 @@ def get_token():
     user_service = UserService(session)
     token_service = TokenService(user_service)
 
-    user = user_service.get_user_by_email(data["email"])
-    if user and user.check_password(data["password"]):
-        return { "token": token_service.generate_token(user),
-                "id" : user.id}
+    users = user_service.list_users()
+    for user in users:
+        if user.email == data["email"]:
+            if user.check_password(data["password"]):
+                return {
+                    "token": token_service.generate_token(user),
+                    "id": user.id
+                }
 
     return { "error": "Invalid credentials" }, 400
