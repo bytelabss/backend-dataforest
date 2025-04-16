@@ -32,10 +32,21 @@ class Config(FlaskConfig):
     DB_PASS = os.getenv("DB_PASS")
     DB_NAME = os.getenv("DB_NAME")
 
+    
+    # Database 2
+    DB_HOST2 = os.getenv("DB_HOST2")
+    DB_PORT2 = os.getenv("DB_PORT2")
+    DB_USER2 = os.getenv("DB_USER2")
+    DB_PASS2 = os.getenv("DB_PASS2")
+    DB_NAME2 = os.getenv("DB_NAME2")
+
     # SQLAlchemy
     SQLALCHEMY_DATABASE_URI = (
         f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     )
+    SQLALCHEMY_BINDS = {
+        "secundario":f"postgresql://{DB_USER2}:{DB_PASS2}@{DB_HOST2}:{DB_PORT2}/{DB_NAME2}"
+    }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = APP_ENV == "development"
 

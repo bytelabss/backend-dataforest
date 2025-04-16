@@ -37,16 +37,21 @@ def handle_exceptions(func):
 @requires_auth(required_role=UserRole.ADMINISTRATOR)
 def create_user():
     session = Session()
+    
     service = UserService(session)
     data = request.get_json()
+    
     validated_data = user_schema.load(data)
+
     user = service.create_user(
         full_name=validated_data["full_name"],
         email=validated_data["email"],
         role=validated_data["role"],
         password=validated_data["password"],
     )
+
     return jsonify(user_schema.dump(user)), 201
+
 
 
 @bp.route("/users/<uuid:user_id>", methods=["GET"])
