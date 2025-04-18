@@ -88,6 +88,11 @@ class Config(FlaskConfig):
             "MONGO_USER",
             "MONGO_PASS",
             "MONGO_DB",
+            "DB_HOST2",
+            "DB_PORT2",
+            "DB_USER2",
+            "DB_PASS2",
+            "DB_NAME2",
         ]
 
         for var in required_vars:
