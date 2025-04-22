@@ -4,6 +4,8 @@ from flask import Blueprint, request, jsonify
 from marshmallow import ValidationError
 
 from ..database import Session
+from ..auth.decorators import requires_auth
+from ..users.models import UserRole
 from .services import GeospatialDataService
 from .schemas import polygon_data_schema, geospatial_data_schema
 from .exceptions import GeospatialDataNotFoundError
@@ -26,6 +28,7 @@ def handle_exceptions(func):
 
 @bp.route("/geospatial_data", methods=["POST"])
 @handle_exceptions
+@requires_auth(required_role=(UserRole.ADMINISTRATOR, UserRole.ENVIRONMENTAL_ENGINEER, UserRole.PRODUCER))
 def get_data_from_coordinates():
     session = Session()
     service = GeospatialDataService(session)
