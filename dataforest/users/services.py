@@ -104,11 +104,12 @@ class UserService:
 
         if not user:
             raise UserNotFoundError
-        self.repository.delete(user)
         service2.delete_user(id)
         service3.delete_user(id)
 
     def list_users(self) -> List[User]:
+
+        user_list: List[User] = []
 
         session3 = MemorySession()
         service3 = TempUsersService(session3)
@@ -128,9 +129,10 @@ class UserService:
             if(temp_user != None):
                 user.email = temp_user.email
                 user.full_name = temp_user.full_name
+                user_list.append(user)
 
 
-        return usuarios
+        return user_list
 
 
 class PasswordService:
