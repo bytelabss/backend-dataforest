@@ -40,12 +40,15 @@ class Config(FlaskConfig):
     DB_PASS2 = os.getenv("DB_PASS2")
     DB_NAME2 = os.getenv("DB_NAME2")
 
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
     # SQLAlchemy
     SQLALCHEMY_DATABASE_URI = (
         f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     )
     SQLALCHEMY_BINDS = {
-        "secundario":f"postgresql://{DB_USER2}:{DB_PASS2}@{DB_HOST2}:{DB_PORT2}/{DB_NAME2}"
+        "secundario":f"postgresql://{DB_USER2}:{DB_PASS2}@{DB_HOST2}:{DB_PORT2}/{DB_NAME2}",
+        "memory":f'sqlite:///db.sqlite3'
     }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = APP_ENV == "development"
@@ -66,6 +69,8 @@ class Config(FlaskConfig):
     TESTING = os.getenv("APP_TESTING", APP_ENV == "testing")
     SECRET_KEY = APP_SECRET
     JSON_SORT_KEYS = False
+
+    PATH_SQL = os.path.join(os.path.dirname(__file__), 'schema.sql')
 
     @classmethod
     def validate_settings(cls):

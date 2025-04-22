@@ -3,7 +3,7 @@ from flask_cors import CORS
 
 from .config import Config
 from .log import init_log
-from .database import load_models
+from .database import init_db_from_schema, load_models
 from .blueprints import init_blueprints
 
 
@@ -29,6 +29,9 @@ def create_app(config=Config):
     load_models()
 
     init_blueprints(app)
+
+    with app.app_context():
+        init_db_from_schema()
 
     @app.get("/")
     def index():

@@ -98,5 +98,5 @@ def list_users():
     session = Session()
     service = UserService(session)
     validated_data = pagination_schema.load(request.args)
-    users = service.list_users(validated_data["offset"], validated_data["limit"])
+    users = service.list_users()
     return jsonify(users_schema.dump(users)), 200

@@ -13,8 +13,9 @@ from .exceptions import (
     InvalidUserDataError,
 )
 from cryptography.fernet import Fernet
-from ..database import SecondarySession
+from ..database import SecondarySession, MemorySession
 from ..users_keys.services import UsersKeysService
+from ..temp_user.services import TempUsersService
 
 
 class UserService:
@@ -24,6 +25,10 @@ class UserService:
     def create_user(self, full_name: str, email: str, role: UserRole, password: str) -> User:
         session2 = SecondarySession()
         service2 = UsersKeysService(session2)
+
+        session3 = MemorySession()
+        service3 = TempUsersService(session3)
+
         if not full_name or not email or not password:
             raise InvalidUserDataError
 
@@ -49,6 +54,12 @@ class UserService:
         service2.create_user(
             user_id=encryption_data["user_id"],
             encryption_key=encryption_data["encryption_key"]
+        )
+
+        service3.create_user(
+            id =  str(user.id),
+            full_name=full_name,
+            email=email
         )
 
         return user
@@ -88,29 +99,35 @@ class UserService:
         session2 = SecondarySession()
         service2 = UsersKeysService(session2)
 
+        session3 = MemorySession()
+        service3 = TempUsersService(session3)
+
         if not user:
             raise UserNotFoundError
         self.repository.delete(user)
         service2.delete_user(id)
+        service3.delete_user(id)
 
-    def list_users(self, offset: int = 0, limit: int = 10) -> List[User]:
-        session2 = SecondarySession()
-        service2 = UsersKeysService(session2)
+    def list_users(self) -> List[User]:
+
+        session3 = MemorySession()
+        service3 = TempUsersService(session3)
+
+        session3 = MemorySession()
+        service3 = TempUsersService(session3)
+
+        usuariosTemp = service3.list_users()
         
-        
+        usuarios = self.repository.list_users()
 
-        if offset < 0 or limit <= 0:
-            raise InvalidUserDataError
+        temp_dict = {u.id: u for u in usuariosTemp}
 
-        usuarios = self.repository.list_users(offset, limit)
         for user in usuarios:
-            user_key = service2.get_user_by_user_id(user.id)
-            fernet = Fernet(user_key.encryption_key)
-            decrypted_email = fernet.decrypt(user.email).decode("utf-8")
-            decrypted_name = fernet.decrypt(user.full_name).decode("utf-8")
-            
-            user.email = decrypted_email
-            user.full_name = decrypted_name
+
+            temp_user = temp_dict.get(str(user.id)) 
+            if(temp_user != None):
+                user.email = temp_user.email
+                user.full_name = temp_user.full_name
 
 
         return usuarios
