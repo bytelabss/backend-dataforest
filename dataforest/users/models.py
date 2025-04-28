@@ -7,11 +7,13 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..database import Base
 
+from ..database import SecondaryBase
+
 
 class UserRole(Enum):
-    ENVIRONMENTAL_ENGINEER = "environmental_engineer"
-    PRODUCER = "producer"
-    ADMINISTRATOR = "administrator"
+    ENVIRONMENTAL_ENGINEER = "ENVIRONMENTAL_ENGINEER"
+    PRODUCER = "PRODUCER"
+    ADMINISTRATOR = "ADMINISTRATOR"
 
 
 class User(Base):
@@ -26,10 +28,6 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now()
-    )
-
-    reforested_areas = relationship(
-        "ReforestedArea", back_populates="user", cascade="all, delete-orphan"
     )
 
     def set_password(self, plaintext_password: str) -> None:

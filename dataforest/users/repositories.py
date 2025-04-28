@@ -45,5 +45,5 @@ class UserRepository:
             self.session.rollback()
             return False
 
-    def list_users(self, offset: int = 0, limit: int = 10) -> List[User]:
-        return self.session.query(User).offset(offset).limit(limit).all()
+    def list_users(self) -> List[User]:
+        return self.session.query(User).all()

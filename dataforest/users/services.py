@@ -12,6 +12,10 @@ from .exceptions import (
     EmailAlreadyInUseError,
     InvalidUserDataError,
 )
+from cryptography.fernet import Fernet
+from ..database import SecondarySession, MemorySession
+from ..users_keys.services import UsersKeysService
+from ..temp_user.services import TempUsersService
 
 
 class UserService:
@@ -19,15 +23,46 @@ class UserService:
         self.repository = UserRepository(session)
 
     def create_user(self, full_name: str, email: str, role: UserRole, password: str) -> User:
+        session2 = SecondarySession()
+        service2 = UsersKeysService(session2)
+
+        session3 = MemorySession()
+        service3 = TempUsersService(session3)
+
         if not full_name or not email or not password:
             raise InvalidUserDataError
 
         if self.repository.get_by_email(email):
             raise EmailAlreadyInUseError
+        
+        encryption_key = Fernet.generate_key()
+        fernet = Fernet(encryption_key)
+    
+        encrypted_email = fernet.encrypt(email.encode("utf-8")).decode()
+        encrypted_full_name = fernet.encrypt(full_name.encode("utf-8")).decode()
 
-        user = User(full_name=full_name, email=email, role=role)
+        user = User(full_name=encrypted_full_name, email=encrypted_email, role=role)
         user.set_password(password)
-        return self.repository.insert(user)
+
+        user = self.repository.insert(user)
+
+        encryption_data = {
+            "user_id": user.id,
+            "encryption_key": encryption_key.decode() 
+        }
+
+        service2.create_user(
+            user_id=encryption_data["user_id"],
+            encryption_key=encryption_data["encryption_key"]
+        )
+
+        service3.create_user(
+            id =  str(user.id),
+            full_name=full_name,
+            email=email
+        )
+
+        return user
 
     def get_user_by_id(self, id: UUID) -> User:
         user = self.repository.get_by_id(id)
@@ -36,10 +71,13 @@ class UserService:
         return user
 
     def get_user_by_email(self, email: str) -> User:
-        user = self.repository.get_by_email(email)
-        if not user:
+        usuarios = self.list_users()
+        for user in usuarios:
+            if user.email == email:
+                usuario = user
+        if not usuario:
             raise UserNotFoundError
-        return user
+        return usuario
 
     def update_user(self, id: UUID, full_name: str = None, email: str = None, role: UserRole = None) -> User:
         user = self.get_user_by_id(id)
@@ -58,15 +96,43 @@ class UserService:
 
     def delete_user(self, id: UUID) -> None:
         user = self.repository.get_by_id(id)
+        session2 = SecondarySession()
+        service2 = UsersKeysService(session2)
+
+        session3 = MemorySession()
+        service3 = TempUsersService(session3)
+
         if not user:
             raise UserNotFoundError
-        self.repository.delete(user)
+        service2.delete_user(id)
+        service3.delete_user(id)
 
-    def list_users(self, offset: int = 0, limit: int = 10) -> List[User]:
-        if offset < 0 or limit <= 0:
-            raise InvalidUserDataError
+    def list_users(self) -> List[User]:
 
-        return self.repository.list_users(offset, limit)
+        user_list: List[User] = []
+
+        session3 = MemorySession()
+        service3 = TempUsersService(session3)
+
+        session3 = MemorySession()
+        service3 = TempUsersService(session3)
+
+        usuariosTemp = service3.list_users()
+        
+        usuarios = self.repository.list_users()
+
+        temp_dict = {u.id: u for u in usuariosTemp}
+
+        for user in usuarios:
+
+            temp_user = temp_dict.get(str(user.id)) 
+            if(temp_user != None):
+                user.email = temp_user.email
+                user.full_name = temp_user.full_name
+                user_list.append(user)
+
+
+        return user_list
 
 
 class PasswordService:

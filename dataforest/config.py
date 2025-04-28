@@ -32,12 +32,34 @@ class Config(FlaskConfig):
     DB_PASS = os.getenv("DB_PASS")
     DB_NAME = os.getenv("DB_NAME")
 
+    
+    # Database 2
+    DB_HOST2 = os.getenv("DB_HOST2")
+    DB_PORT2 = os.getenv("DB_PORT2")
+    DB_USER2 = os.getenv("DB_USER2")
+    DB_PASS2 = os.getenv("DB_PASS2")
+    DB_NAME2 = os.getenv("DB_NAME2")
+
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
     # SQLAlchemy
     SQLALCHEMY_DATABASE_URI = (
         f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     )
+    SQLALCHEMY_BINDS = {
+        "secundario":f"postgresql://{DB_USER2}:{DB_PASS2}@{DB_HOST2}:{DB_PORT2}/{DB_NAME2}",
+        "memory":f'sqlite:///db.sqlite3'
+    }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = APP_ENV == "development"
+
+    MONGO_URI = os.getenv("MONGO_URI")
+    MONGO_USER = os.getenv("MONGO_USER")
+    MONGO_PASS = os.getenv("MONGO_PASS")
+    MONGO_DB = os.getenv("MONGO_DB")
+
+    # MongoDB
+    MONGO_URI = MONGO_URI.replace("<user>", MONGO_USER).replace("<db_password>", MONGO_PASS)
 
     # Static
     STATIC_DIR = PROJECT_DIR / "static"
@@ -47,6 +69,8 @@ class Config(FlaskConfig):
     TESTING = os.getenv("APP_TESTING", APP_ENV == "testing")
     SECRET_KEY = APP_SECRET
     JSON_SORT_KEYS = False
+
+    PATH_SQL = os.path.join(os.path.dirname(__file__), 'schema.sql')
 
     @classmethod
     def validate_settings(cls):
@@ -65,6 +89,15 @@ class Config(FlaskConfig):
             "DB_USER",
             "DB_PASS",
             "DB_NAME",
+            "MONGO_URI",
+            "MONGO_USER",
+            "MONGO_PASS",
+            "MONGO_DB",
+            "DB_HOST2",
+            "DB_PORT2",
+            "DB_USER2",
+            "DB_PASS2",
+            "DB_NAME2",
         ]
 
         for var in required_vars:

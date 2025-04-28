@@ -1,13 +1,15 @@
 from marshmallow import Schema, fields, validates_schema, ValidationError
 from marshmallow.validate import Length, Range
 from shapely.geometry import shape
-
+from geoalchemy2 import WKBElement
 
 class GeoJSONField(fields.Field):
     """Custom field for handling GeoJSON serialization and validation."""
 
     def _serialize(self, value, attr, obj, **kwargs):
-        return obj.to_geojson() if value else None
+        value = obj.to_geojson() if value and isinstance(value, WKBElement) else value
+
+        return value if value else None 
 
     def _deserialize(self, value, attr, data, **kwargs):
         try:

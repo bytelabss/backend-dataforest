@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS user_temps (
+    id TEXT PRIMARY KEY,
+    email TEXT NOT NULL UNIQUE,
+    full_name TEXT NOT NULL
+);
