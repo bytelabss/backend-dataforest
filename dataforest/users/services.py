@@ -1,3 +1,4 @@
+import json
 from uuid import UUID
 from typing import List
 
@@ -13,9 +14,9 @@ from .exceptions import (
     InvalidUserDataError,
 )
 from cryptography.fernet import Fernet
-from ..database import SecondarySession, MemorySession
+from ..database import SecondarySession
 from ..users_keys.services import UsersKeysService
-from ..temp_user.services import TempUsersService
+from ..redis_client import redis_client
 
 
 class UserService:
@@ -25,9 +26,6 @@ class UserService:
     def create_user(self, full_name: str, email: str, role: UserRole, password: str) -> User:
         session2 = SecondarySession()
         service2 = UsersKeysService(session2)
-
-        session3 = MemorySession()
-        service3 = TempUsersService(session3)
 
         if not full_name or not email or not password:
             raise InvalidUserDataError
@@ -56,16 +54,42 @@ class UserService:
             encryption_key=encryption_data["encryption_key"]
         )
 
-        service3.create_user(
-            id =  str(user.id),
-            full_name=full_name,
-            email=email
-        )
+        user_data = {
+            'id' : str(user.id),
+            'full_name': full_name,
+            'email': email,
+        }
+
+        users = redis_client.get(f"users")
+
+        if users:
+            users = json.loads(users)  
+        else:
+            users = [] 
+
+        users.append(user_data)
+
+        redis_client.setex(f"users", 3600, json.dumps(users))
 
         return user
 
     def get_user_by_id(self, id: UUID) -> User:
         user = self.repository.get_by_id(id)
+        
+        usersRedi = redis_client.get(f"users")
+
+        if usersRedi:
+            users = json.loads(usersRedi)  
+        else:
+            users = [] 
+
+        for user_json in users:
+            if str(user.id) == str(user_json["id"]):  # Garante que ambos são strings
+                user.email = user_json["email"]
+                user.full_name = user_json["full_name"]
+                break  # já achou o correspondente
+
+
         if not user:
             raise UserNotFoundError
         return user
@@ -95,41 +119,62 @@ class UserService:
         return self.repository.update(user)
 
     def delete_user(self, id: UUID) -> None:
-        user = self.repository.get_by_id(id)
+        userDelete = self.repository.get_by_id(id)
+
+        if not userDelete:
+            raise UserNotFoundError
+
         session2 = SecondarySession()
         service2 = UsersKeysService(session2)
 
-        session3 = MemorySession()
-        service3 = TempUsersService(session3)
+        usuarios = self.list_users()
 
-        if not user:
-            raise UserNotFoundError
+        usersRedis = [] 
+
+        for usuario in usuarios:
+            
+            if(userDelete.id == usuario.id):
+                continue
+
+            user_data = {
+                'id' : str(usuario.id),
+                'full_name': usuario.full_name,
+                'email': usuario.email,
+            }
+                
+            usersRedis.append(user_data)
+
+        redis_client.setex(f"users", 3600, json.dumps(usersRedis))
+
         service2.delete_user(id)
-        service3.delete_user(id)
+
+    def list_users_criptografados(self) -> List[User]:
+       
+        usuarios = self.repository.list_users()
+
+        return usuarios
 
     def list_users(self) -> List[User]:
 
         user_list: List[User] = []
 
-        session3 = MemorySession()
-        service3 = TempUsersService(session3)
+        usersRedi = redis_client.get(f"users")
 
-        session3 = MemorySession()
-        service3 = TempUsersService(session3)
+        if usersRedi:
+            users = json.loads(usersRedi)  
+        else:
+            users = [] 
 
-        usuariosTemp = service3.list_users()
         
         usuarios = self.repository.list_users()
 
-        temp_dict = {u.id: u for u in usuariosTemp}
-
         for user in usuarios:
-
-            temp_user = temp_dict.get(str(user.id)) 
-            if(temp_user != None):
-                user.email = temp_user.email
-                user.full_name = temp_user.full_name
-                user_list.append(user)
+            for user_json in users:
+                if str(user.id) == str(user_json["id"]):  # Garante que ambos são strings
+                    user.email = user_json["email"]
+                    user.full_name = user_json["full_name"]
+                    user_list.append(user)
+                    break  # já achou o correspondente
 
 
         return user_list
