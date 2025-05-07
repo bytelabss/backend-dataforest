@@ -2,6 +2,7 @@ from functools import wraps
 
 from flask import Blueprint, request, jsonify
 from marshmallow import ValidationError
+import traceback
 
 from ..database import Session
 from ..auth.decorators import requires_auth
@@ -28,7 +29,7 @@ def handle_exceptions(func):
 
 @bp.route("/geospatial_data", methods=["POST"])
 @handle_exceptions
-@requires_auth(required_role=(UserRole.ADMINISTRATOR, UserRole.ENVIRONMENTAL_ENGINEER, UserRole.PRODUCER))
+@requires_auth(required_role=(UserRole.ADMINISTRATOR))
 def get_data_from_coordinates():
     session = Session()
     service = GeospatialDataService(session)
@@ -37,9 +38,11 @@ def get_data_from_coordinates():
         validated_data = polygon_data_schema.load(data)
     except ValidationError as e:
         return jsonify({"error": e.messages}), 400
+    traceback.print_exc()
     area = service.get_data_from_coordinates(**validated_data)
     print(area)
     print(type(area))
+    
     return jsonify(geospatial_data_schema.dump(area)), 201
 
     

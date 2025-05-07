@@ -9,6 +9,8 @@ from .models import UserRole
 from .services import UserService
 from .exceptions import UserNotFoundError, EmailAlreadyInUseError, InvalidUserDataError
 from .schemas import user_schema, users_schema, pagination_schema
+from ..redis_client import redis_client
+import json
 
 bp = Blueprint("users", __name__)
 
@@ -61,6 +63,7 @@ def get_user(user_id):
     session = Session()
     service = UserService(session)
     user = service.get_user_by_id(user_id)
+
     return jsonify(user_schema.dump(user)), 200
 
 
@@ -99,4 +102,5 @@ def list_users():
     service = UserService(session)
     validated_data = pagination_schema.load(request.args)
     users = service.list_users()
+
     return jsonify(users_schema.dump(users)), 200
