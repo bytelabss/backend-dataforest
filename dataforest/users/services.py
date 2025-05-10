@@ -84,11 +84,10 @@ class UserService:
             users = [] 
 
         for user_json in users:
-            if str(user.id) == str(user_json["id"]):  # Garante que ambos são strings
+            if str(user.id) == str(user_json["id"]):
                 user.email = user_json["email"]
                 user.full_name = user_json["full_name"]
-                break  # já achou o correspondente
-
+                break
 
         if not user:
             raise UserNotFoundError
@@ -96,6 +95,7 @@ class UserService:
 
     def get_user_by_email(self, email: str) -> User:
         usuarios = self.list_users()
+        usuario = None
         for user in usuarios:
             if user.email == email:
                 usuario = user
@@ -103,20 +103,89 @@ class UserService:
             raise UserNotFoundError
         return usuario
 
-    def update_user(self, id: UUID, full_name: str = None, email: str = None, role: UserRole = None) -> User:
+    def update_user_postgres(
+            self, 
+            id: UUID, 
+            full_name: str = None, 
+            email: str = None, 
+            role: UserRole = None,
+            password: str = None
+            ) -> User:
+        secondary_session = SecondarySession()
+        service2 = UsersKeysService(secondary_session)
+        user_key = service2.get_user_by_user_id(id)
+
+        if not user_key:
+            raise UserNotFoundError
+
+        fernet = Fernet(user_key.encryption_key)
+
         user = self.get_user_by_id(id)
 
-        if email and user.email != email and self.repository.get_by_email(email):
-            raise EmailAlreadyInUseError
+        if email:
+            
+            if user.email != email:
+                    if self.repository.get_by_email(email):
+                        raise EmailAlreadyInUseError
+                    user.email = email
 
         if full_name:
-            user.full_name = full_name
-        if email:
-            user.email = email
+            
+            if user.full_name != full_name:
+                user.full_name = full_name
         if role:
             user.role = role
+        if password:
+            user.set_password(password)
+
+        user.email = fernet.encrypt(user.email.encode("utf-8")).decode()
+        user.full_name = fernet.encrypt(user.full_name.encode("utf-8")).decode()
 
         return self.repository.update(user)
+
+    def update_user_redis(self, user: UUID) -> User:
+        secondary_session = SecondarySession()
+        service2 = UsersKeysService(secondary_session)
+        user_key = service2.get_user_by_user_id(user.id)
+
+        if not user_key:
+            raise UserNotFoundError
+
+        fernet = Fernet(user_key.encryption_key)
+
+        found = False
+        user_data = {
+            'id' : str(user.id),
+            'full_name': fernet.decrypt(user.full_name.encode("utf-8")).decode(),
+            'email': fernet.decrypt(user.email.encode("utf-8")).decode(),
+        }
+
+        users = redis_client.get(f"users")
+
+        if users:
+            users = json.loads(users)  
+        else:
+            users = [] 
+
+        for i, user_json in enumerate(users):
+            if str(user.id) == str(user_json["id"]):
+                users[i] = user_data
+                found = True
+                break
+
+        if not found:
+            users.append(user_data)
+
+        redis_client.setex(f"users", 3600, json.dumps(users))
+
+    def update_user(self, id: UUID, full_name: str = None, email: str = None, role: UserRole = None) -> User:
+        user = self.update_user_postgres(id, full_name, email, role)
+        self.update_user_redis(user)
+        if user:
+            user.email = email
+            user.full_name = full_name
+
+        return user
 
     def delete_user(self, id: UUID) -> None:
         userDelete = self.repository.get_by_id(id)
@@ -132,7 +201,7 @@ class UserService:
         usersRedis = [] 
 
         for usuario in usuarios:
-            
+
             if(userDelete.id == usuario.id):
                 continue
 
@@ -141,7 +210,7 @@ class UserService:
                 'full_name': usuario.full_name,
                 'email': usuario.email,
             }
-                
+
             usersRedis.append(user_data)
 
         redis_client.setex(f"users", 3600, json.dumps(usersRedis))
@@ -158,24 +227,22 @@ class UserService:
 
         user_list: List[User] = []
 
-        usersRedi = redis_client.get(f"users")
+        users_redis = redis_client.get(f"users")
 
-        if usersRedi:
-            users = json.loads(usersRedi)  
+        if users_redis:
+            users = json.loads(users_redis)  
         else:
             users = [] 
 
-        
         usuarios = self.repository.list_users()
 
         for user in usuarios:
             for user_json in users:
-                if str(user.id) == str(user_json["id"]):  # Garante que ambos são strings
+                if str(user.id) == str(user_json["id"]):
                     user.email = user_json["email"]
                     user.full_name = user_json["full_name"]
                     user_list.append(user)
-                    break  # já achou o correspondente
-
+                    break
 
         return user_list
 
