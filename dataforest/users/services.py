@@ -178,8 +178,15 @@ class UserService:
 
         redis_client.setex(f"users", 3600, json.dumps(users))
 
-    def update_user(self, id: UUID, full_name: str = None, email: str = None, role: UserRole = None) -> User:
-        user = self.update_user_postgres(id, full_name, email, role)
+    def update_user(
+            self, 
+            id: UUID, 
+            full_name: str = None, 
+            email: str = None, 
+            role: UserRole = None,
+            password: str = None
+            ) -> User:
+        user = self.update_user_postgres(id, full_name, email, role, password)
         self.update_user_redis(user)
         if user:
             user.email = email
