@@ -80,6 +80,7 @@ def update_user(user_id):
         validated_data.get("full_name"),
         validated_data.get("email"),
         validated_data.get("role"),
+        validated_data.get("password"),
     )
     return jsonify(user_schema.dump(user)), 200
 
