@@ -55,3 +55,26 @@ class ConsentimentoRepository:
             self.session.rollback()
             print(f"[ERRO AO ATUALIZAR CONSENTIMENTO] {e}")
             return None
+
+
+    def has_user_accepted_latest(self, user_id: UUID, term_id: UUID) -> bool:
+        required_sections = self.session.query(TermSection).filter_by(
+            term_id=term_id,
+            required=True
+        ).all()
+
+
+
+
+        if not required_sections:
+            return True 
+
+        required_section_ids = [section.id for section in required_sections]
+
+        accepted_count = self.session.query(UserConsentSection).filter(
+            UserConsentSection.user_id == user_id,
+            UserConsentSection.section_id.in_(required_section_ids),
+            UserConsentSection.accepted.is_(True)
+        ).count()
+
+        return accepted_count == len(required_sections)

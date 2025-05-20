@@ -75,3 +75,7 @@ class TermService:
         except Exception as e:
             self.session.rollback()
             return {"success": False, "message": "Erro ao atualizar termos"}
+
+    def has_user_accepted_latest(self, user_id: str) -> bool:
+        latest_term = self.repository.get_latest_term()
+        return self.repository.has_user_accepted_latest(user_id, latest_term.id)
