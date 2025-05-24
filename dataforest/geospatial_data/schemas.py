@@ -7,6 +7,7 @@ class GeospatialDataSchema(Schema):
     geom = fields.String(required=True)
     raster = fields.Dict(required=True)
 
+
 class PolygonDataSchema(Schema):
     coordinates = fields.List(
         fields.List(
@@ -24,6 +25,11 @@ class PolygonDataSchema(Schema):
             if len(point) != 2:
                 raise ValidationError("Each coordinate must have exactly 2 values (latitude and longitude).")
 
-geospatial_data_schema = GeospatialDataSchema()
 
+# Schemas for single objects
+geospatial_data_schema = GeospatialDataSchema()
 polygon_data_schema = PolygonDataSchema()
+
+# Schemas for lists of objects
+geospatial_data_list_schema = fields.List(fields.Nested(GeospatialDataSchema))
+polygon_data_list_schema = fields.List(fields.Nested(PolygonDataSchema))
