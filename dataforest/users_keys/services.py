@@ -24,8 +24,6 @@ class UsersKeysService:
     
     def get_user_by_user_id(self, user_id: UUID) -> UsersKeys:
         userKey = self.repository.get_by_user_id(user_id)
-        if not userKey:
-            raise UserNotFoundError
         return userKey
     
     def delete_user(self, id: UUID) -> None:

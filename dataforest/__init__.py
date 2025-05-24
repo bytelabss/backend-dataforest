@@ -1,10 +1,16 @@
+import json
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 
 from .config import Config
 from .log import init_log
-from .database import init_db_from_schema, load_models
+from .database import load_models, Session, SecondarySession
 from .blueprints import init_blueprints
+from .redis_client import redis_client
+from .users.services import UserService
+from .users_keys.services import UsersKeysService
+from cryptography.fernet import Fernet
+
 
 
 def create_app(config=Config):
@@ -31,7 +37,38 @@ def create_app(config=Config):
     init_blueprints(app)
 
     with app.app_context():
-        init_db_from_schema()
+
+        usersRedis = [] 
+
+        session = Session() 
+        service = UserService(session)
+
+        session2 = SecondarySession()
+        service2 = UsersKeysService(session2)
+
+        usuarios = service.list_users_criptografados()
+
+        for usuario in usuarios:
+            chaveDescriptografia = service2.get_user_by_user_id(usuario.id)
+
+            if chaveDescriptografia != None:
+
+                fernet = Fernet(chaveDescriptografia.encryption_key)
+
+                emailDescriptografado = fernet.decrypt(usuario.email.encode("utf-8")).decode()
+                full_name = fernet.decrypt(usuario.full_name.encode("utf-8")).decode()
+
+                user_data = {
+                    'id' : str(usuario.id),
+                    'full_name': full_name,
+                    'email': emailDescriptografado,
+                }
+
+                usersRedis.append(user_data)
+
+        redis_client.set("users", json.dumps(usersRedis))
+
+        session.close()
 
     @app.get("/")
     def index():

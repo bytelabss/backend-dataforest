@@ -25,11 +25,7 @@ secondary_engine = create_engine(
 )
 SecondarySession = sessionmaker(autocommit=False, autoflush=False, bind=secondary_engine)
 
-# engine e session do secundário
-memory_engine = create_engine(
-    Config.SQLALCHEMY_BINDS["memory"], echo=Config.SQLALCHEMY_ECHO
-)
-MemorySession = sessionmaker(autocommit=False, autoflush=False, bind=memory_engine)
+
 
 class Base(DeclarativeBase):
     pass
@@ -37,25 +33,6 @@ class Base(DeclarativeBase):
 class SecondaryBase(DeclarativeBase):
     pass
 
-
-class MemoryBase(DeclarativeBase):
-    pass
-
-
-def init_db_from_schema():
-    schema_path = Config.PATH_SQL
-    db_path = Config.SQLALCHEMY_BINDS["memory"].replace('sqlite:///', '')
-
-    with open(schema_path, 'r') as f:
-        schema_sql = f.read()
-
-    print(f"[DEBUG] DB path: {db_path}")
-
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.executescript(schema_sql)
-    conn.commit()
-    conn.close()
 
 def load_models():
     for module_info in pkgutil.iter_modules([Config.APP_DIR]):
