@@ -94,3 +94,22 @@ def update_terms():
         
     finally:
         session.close()
+
+@bp.route('/terms/verifica', methods=['GET'])
+@requires_auth()
+def verifica_termo():
+    session = Session()
+    service = TermService(session)
+    user_id = g.current_user.id
+
+    has_user_accepted_latest_term = service.has_user_accepted_latest(user_id)
+    if has_user_accepted_latest_term:
+        return jsonify({
+            "success": False,
+            "message": "User has already accepted the latest term."
+        }), 400
+    else:
+        return jsonify({
+            "success": True,
+            "message": "User has not accepted the latest term."
+        }), 200
