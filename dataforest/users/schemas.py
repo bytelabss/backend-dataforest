@@ -12,6 +12,7 @@ class UserSchema(Schema):
     confirm_password = fields.String(load_only=True, required=True)
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)
+    data_portability = fields.Boolean( missing=False)
 
     @validates_schema
     def validate_passwords(self, data, **kwargs):

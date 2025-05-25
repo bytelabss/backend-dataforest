@@ -38,3 +38,12 @@ class TokenService:
             return None
         except jwt.InvalidTokenError:
             return None
+    
+    def verify_token_criptografado(self, token):
+        try:
+            data = jwt.decode(token, Config.SECRET_KEY, algorithms=["HS256"])
+            return self.user_service.get_user_by_id_criptografado(data["id"])
+        except jwt.ExpiredSignatureError:
+            return None
+        except jwt.InvalidTokenError:
+            return None

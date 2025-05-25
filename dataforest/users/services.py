@@ -93,6 +93,13 @@ class UserService:
             raise UserNotFoundError
         return user
 
+    def get_user_by_id_criptografado(self, id: UUID) -> User:
+        user = self.repository.get_by_id(id)
+        
+        if not user:
+            raise UserNotFoundError
+        return user
+
     def get_user_by_email(self, email: str) -> User:
         usuarios = self.list_users()
         usuario = None
