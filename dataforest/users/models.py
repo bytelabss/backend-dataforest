@@ -29,6 +29,7 @@ class User(Base):
     updated_at: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now()
     )
+    data_portability: Mapped[bool] = mapped_column(nullable=True, default=False)
 
     def set_password(self, plaintext_password: str) -> None:
         from .services import PasswordService
