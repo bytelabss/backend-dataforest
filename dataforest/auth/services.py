@@ -23,7 +23,7 @@ class TokenService:
         return jwt.encode(
             {
                 "id": str(user.id),
-                "email": user.email,
+                "pass": user.encrypted_password,
                 "exp": datetime.now(UTC) + timedelta(seconds=expiration),
             },
             Config.SECRET_KEY,
@@ -33,7 +33,16 @@ class TokenService:
     def verify_token(self, token):
         try:
             data = jwt.decode(token, Config.SECRET_KEY, algorithms=["HS256"])
-            return self.user_service.get_user_by_email(data["email"])
+            return self.user_service.get_user_by_id(data["id"])
+        except jwt.ExpiredSignatureError:
+            return None
+        except jwt.InvalidTokenError:
+            return None
+    
+    def verify_token_criptografado(self, token):
+        try:
+            data = jwt.decode(token, Config.SECRET_KEY, algorithms=["HS256"])
+            return self.user_service.get_user_by_id_criptografado(data["id"])
         except jwt.ExpiredSignatureError:
             return None
         except jwt.InvalidTokenError:
